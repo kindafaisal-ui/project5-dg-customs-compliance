@@ -1,0 +1,541 @@
+{
+  "name": "DG-Customs-Compliance-Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -992,
+        32
+      ],
+      "id": "300d3281-fbe1-45a5-aa65-5e8029635581",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -576,
+        240
+      ],
+      "id": "e53ec943-d588-4ad2-b60e-6d37789295d9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "RNYMGpxXLgUR4UDo",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.un_number }}{{ $json.route }}{{ $json.doc_id }}{{ $json.error_detail }}",
+        "options": {
+          "systemMessage": "You are a Senior Logistics Compliance Officer specializing in BOTH:\n1. Dangerous Goods (DG) regulations — ADR (Road), IMDG (Sea), IATA DGR (Air)\n2. Customs Clearance — EU Customs Code (UCC), CMR waybills, EUR.1 certificates, HS codes\n\nYour Goal: Analyze the shipment document provided and check for compliance issues in BOTH dangerous goods regulations AND customs clearance requirements.\n\nFor DG documents: check UN number, DG class, tunnel restrictions (ADR), stowage (IMDG), packing instructions (IATA).\nFor Customs documents: check HS code validity, EORI number, EUR.1 eligibility, CMR completeness, route-specific requirements.\n\nProvide a structured response covering both compliance areas."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -432,
+        32
+      ],
+      "id": "e4bbbcb5-ce5f-48aa-acef-35164d472526",
+      "name": "Compliance Logic Engine."
+    },
+    {
+      "parameters": {
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        288
+      ],
+      "id": "126987b5-5fd9-4fce-a16a-bd3563f6d0db",
+      "name": "Live Regulatory Search",
+      "credentials": {
+        "tavilyApi": {
+          "id": "dArQj1mIEHnpmfGF",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "kindafaisal@gmail.com",
+        "subject": "⚠️ Logistics Alert: DG & Customs Compliance Risk Found",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        32
+      ],
+      "id": "4453d1cf-bbcd-424f-a440-a1584696a664",
+      "name": "Automated Emergency Alert.",
+      "webhookId": "527454fe-4f90-4678-9b61-b51dd8af6426",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GtpAIfkELQJF4yuL",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1xGKLZ_IfzZrV2EzTXA3yEpAD-1Zl0et2RtsEq_IPC5s"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2058733959,
+          "mode": "list",
+          "cachedResultName": "shipments.csv",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xGKLZ_IfzZrV2EzTXA3yEpAD-1Zl0et2RtsEq_IPC5s/edit#gid=2058733959"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "compliance_status",
+              "lookupValue": "Human review"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -608,
+        32
+      ],
+      "id": "8952697c-349d-4704-aef6-70e58510ff21",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IbgJBk19scWKkiL5",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "=1xGKLZ_IfzZrV2EzTXA3yEpAD-1Zl0et2RtsEq_IPC5s",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2058733959,
+          "mode": "list",
+          "cachedResultName": "shipments.csv",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xGKLZ_IfzZrV2EzTXA3yEpAD-1Zl0et2RtsEq_IPC5s/edit#gid=2058733959"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "doc_id": "=DOC-5000"
+          },
+          "matchingColumns": [
+            "doc_id"
+          ],
+          "schema": [
+            {
+              "id": "doc_id",
+              "displayName": "doc_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "time",
+              "displayName": "time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "week_number",
+              "displayName": "week_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "month",
+              "displayName": "month",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "doc_type",
+              "displayName": "doc_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "carrier",
+              "displayName": "carrier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "processing_time_seconds",
+              "displayName": "processing_time_seconds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "manual_baseline_seconds",
+              "displayName": "manual_baseline_seconds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "time_saved_seconds",
+              "displayName": "time_saved_seconds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence_score",
+              "displayName": "confidence_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "compliance_status",
+              "displayName": "compliance_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_detail",
+              "displayName": "error_detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dg_class",
+              "displayName": "dg_class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "un_number",
+              "displayName": "un_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_dangerous_goods",
+              "displayName": "is_dangerous_goods",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customs_hold",
+              "displayName": "customs_hold",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "processing_time_minutes",
+              "displayName": "processing_time_minutes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence_band",
+              "displayName": "confidence_band",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "doc_category",
+              "displayName": "doc_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        80,
+        176
+      ],
+      "id": "bff3def7-72e9-43c5-bbb2-1b8322b85c54",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IbgJBk19scWKkiL5",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f40b0982-baa0-4bed-b056-d326c3438b76",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -960,
+        208
+      ],
+      "id": "4645d334-f3a6-47bf-9d35-e35845a6b7d0",
+      "name": "Webhook",
+      "webhookId": "f40b0982-baa0-4bed-b056-d326c3438b76"
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-03-19T16:23:37.123+01:00",
+          "Readable date": "March 19th 2026, 4:23:37 pm",
+          "Readable time": "4:23:37 pm",
+          "Day of week": "Thursday",
+          "Year": "2026",
+          "Month": "March",
+          "Day of month": "19",
+          "Hour": "16",
+          "Minute": "23",
+          "Second": "37",
+          "Timezone": "Europe/Berlin (UTC+01:00)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Compliance Logic Engine.": [
+      {
+        "json": {
+          "output": "Short answer up front\n- I cannot verify the entry \"UN2891\" from the information you gave — it does not match any UN number / proper shipping name I can find in the standard DG lists. I need the proper shipping name or the Safety Data Sheet (SDS)/technical name to confirm DG classification and the applicable ADR / IMDG / IATA requirements.\n- Also missing for customs: HS (CN/TARIC) code, consignor/consignee (with EORI where applicable), net/gross weights, packaging type and quantities, commercial invoice, and the intended transport mode (road/air/sea). These are required to assess EU export / Swiss import (EUR.1, export declaration, CMR) compliance.\n\nWhat I checked and why I need more info\n- I searched standard DG resources for UN 2891 and could not confirm a validated proper shipping name, hazard class, or packing group for UN2891. Because every action (ADR tunnel code, IMDG stowage, IATA packing instruction) depends on the exact PSN, class and packing group, I cannot safely assess DG compliance until you confirm the substance name or provide the SDS.\n- The string “DE → CH” implies a movement Germany → Switzerland (EU export to a non‑EU partner). That raises specific customs steps (export declaration at German customs, Swiss import clearance, possible EUR.1 for preferential treatment). I need details to confirm eligibility.\n\nRequired information (please provide as a minimum)\n1. Substance identity:\n   - Proper shipping name and full UN number as printed on DG docs, or\n   - Full chemical name(s) and Safety Data Sheet (SDS).\n2. DG details:\n   - Class(es) and subsidiary risk(s), Packing Group (I/II/III).\n   - Quantity per package and total quantity.\n   - Type of packaging (inner, outer, UN packaging codes), whether UN‑marked.\n   - Whether limited quantity (LQ) or excepted quantity applies; inner/outer capacities.\n   - Transport mode (road, sea, air) and planned carriers.\n3. Customs / commercial:\n   - HS (CN/TARIC) code (6–10 digits) or commodity description for coding.\n   - Commercial invoice (value, origin, invoice number).\n   - Exporter (shipper) EORI number (DE EORI?) and importer/consignee details (Swiss).\n   - Origin statement / supplier’s declaration (to support EUR.1 if requested).\n   - Any movement or logistics documents: CMR number / waybill, booking, CHDOC‑5000 explanation (is this a document ID?).\n4. Route/quantities for preferential origin: producer/works/warehouse addresses, manufacturing date(s), any materials from non‑preferential origin.\n\nDangerous goods compliance (what I will check once you provide the above)\n- Validate UN number / Proper Shipping Name against the ADR / IMDG / IATA Dangerous Goods Lists.\n- Confirm Class and subsidiary risks and Packing Group — these determine:\n  - ADR: tunnel restriction code (A–E), orange plate/placard, consignment note wording, driver training, vehicle equipment and limited quantity or tank/portable tank rules, and marking/label requirements.\n  - IMDG: Marine pollutant status, stowage group/category, segregation from incompatible cargo, EMS codes, MFAG/ERG guidance, and required stowage/segregation on vessel.\n  - IATA: correct Packing Instruction (PI) number, authorized packaging, net quantity limits per package, state/air waybill DG statement and shipper’s declaration format, passenger/cargo aircraft restrictions, and labels/markings.\n- Confirm the Dangerous Goods Declaration (shipper’s declaration) content: UN number, PSN (technical name if required), class, PG, packing instruction, total quantities, number and type of packages, emergency contact, certification and signature.\n- Packaging/marking: check UN packaging codes, markings, hazard labels and overpack marks, LQ marks if applicable.\n- For ADR (road) DE→CH specifically:\n  - Confirm tunnel restriction code is compatible with the intended route and vehicle signage.\n  - Ensure transport document (ADR consignment note) is present and in required language(s).\n  - Ensure vehicle placards/orange plates are correct for the loaded UN number and quantity.\n  - Driver must hold ADR training appropriate to the class carried.\n- For sea (IMDG) or air (IATA), ensure carrier acceptance and applicable restrictions (IATA forbids certain dangerous goods entirely or limits quantities).\n\nCustoms & transport documentation compliance (DE → CH route)\n- Export formalities:\n  - German export customs declaration (EX1 / export SAD) must be lodged prior to exit from EU (or appropriate export MRN). If goods transit EU territory under transit, ensure T1/TAD documents are used properly.\n  - Provide commercial invoice, packing list, and any certificates of origin / EUR.1 if preferential treatment is to be claimed.\n  - Exporter must have an EORI number (DE EORI) — that number is used on export declarations.\n- Swiss import:\n  - Switzerland accepts EUR.1 for preferential origin under the EU‑Switzerland FTA if origin rules are met; EUR.1 must be issued by customs or a competent authority and accompany the shipment at import.\n  - Alternatively, a supplier’s declaration may be accepted only under specific rules — check eligibility. If you want preferential tariff treatment, ensure you can evidence originating materials and apply for EUR.1 or provide appropriate documentation at export.\n  - Swiss importers must clear and pay import VAT/duties; ensure consignee info and Swiss customs correspondent are ready.\n- HS code:\n  - Provide CN/TARIC code used for export declaration; I can check duty/VAT rates and any export controls (dual‑use, REACH, export licensing).\n- CMR waybill (road):\n  - Must include consignor and consignee full details (addresses, contacts), place and date of taking over and delivery, description of goods, marks and numbers, number of packages, gross weight, and if DG are present a note that DG documents accompany the consignment. The CMR does not replace the DG documentation and must not contradict it.\n- Other certificates:\n  - If claiming preferential origin (EUR.1), ensure proof of origin and exporter’s EORI, and that the goods meet the origin rules of the EU‑Switzerland agreement.\n  - If export controls apply (dual‑use, military, chemicals), ensure relevant licenses are in place before export.\n\nImmediate red flags from the short input you gave\n- UN2891 is not verifiable from public DG lists I checked — this is a blocker. If the shipper wrote UN2891 erroneously, the shipment could be illegal or refused by carriers.\n- No HS code, no EORI, no clear consignee or commercial invoice attached — high risk of customs refusal/delay.\n- If DG documentation uses an incorrect UN number or PSN, carriers (airlines, shipping lines, hauliers) will refuse acceptance and insurance may be void.\n- For DE→CH: not lodging a proper German export declaration or failing to present EUR.1 (when claimed) will cause delays, duties and potential penalties.\n\nSuggested next steps (what to send me / do next)\n1. Send the SDS and a copy/photo of the shipper’s Dangerous Goods Declaration (or the DG line from the consignment note) and any package markings that show UN2891.\n2. Send the commercial invoice and the HS code you intend to use (or the commodity description so I can propose an HS code).\n3. Confirm transport mode(s) (road only, or multimodal: road → sea/air) and the total quantities and packaging details (number and type of packages, gross/net weights).\n4. Confirm exporter EORI and consignee details in Switzerland and whether you are claiming preferential origin (EUR.1). If yes, provide origin proof (manufacturer statements, supplier declarations).\n5. If “CHDOC‑5000” is a document number, upload or paste that document; if it’s a booking or customs reference explain what it is.\n\nIf you want, I can:\n- Verify the correct UN number / proper shipping name and give the exact ADR tunnel code, recommended ADR consignment wording, IMDG stowage/EMS, and the IATA packing instruction once you supply the SDS or technical name.\n- Propose the likely HS codes from a product description and advise on EUR.1 eligibility steps and the wording needed on invoices.\n- Provide a completed DG and customs checklist you can give to the shipper/carrier.\n\nBottom line: I can complete a full compliance check, but I must first confirm what UN2891 actually is (SDS / technical name) and receive the commercial/cargo details listed above. Send those and I’ll run the DG and customs checks and give an itemized list of required corrections and documents."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Compliance Logic Engine.",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compliance Logic Engine.": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Automated Emergency Alert.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Live Regulatory Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "Compliance Logic Engine.",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Compliance Logic Engine.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Automated Emergency Alert.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "294a0450-c095-4f95-ae3f-837b171ab0e6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "40900f79b2659ff491dc454f07bda428e3a2e762884a19ea36a785f589743bc3"
+  },
+  "id": "ano1cUXn8vZOYvov",
+  "tags": []
+}
