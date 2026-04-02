@@ -1,0 +1,587 @@
+{
+  "name": "DG-Customs-Compliance-Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtMinute": null
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -992,
+        32
+      ],
+      "id": "300d3281-fbe1-45a5-aa65-5e8029635581",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -432,
+        272
+      ],
+      "id": "e53ec943-d588-4ad2-b60e-6d37789295d9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "RNYMGpxXLgUR4UDo",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.un_number }}{{ $json.route }}{{ $json.doc_id }}{{ $json.error_detail }}",
+        "options": {
+          "systemMessage": "You are a compliance checker for a German freight company.\n\nYou will receive multiple shipment documents. Analyze ALL of them and produce ONE consolidated daily compliance report in this exact format:\n\n⚠️ Daily Compliance Report — [today's date]\n[X] shipments require attention | [Y] compliant\n\n🚨 FLAGGED SHIPMENTS:\n\n[For each flagged shipment:]\n- [DOC-ID] — [Route] — [Doc Type]\n  Issue: [one sentence explaining the problem in plain language]\n  Action: [one sentence telling the team what to do]\n\n✅ COMPLIANT SHIPMENTS:\n[List doc IDs that passed]\n\n---\nProcessed by ShipmentDoc AI · Kinda Faisal AI Consulting"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -432,
+        32
+      ],
+      "id": "e4bbbcb5-ce5f-48aa-acef-35164d472526",
+      "name": "Compliance Logic Engine."
+    },
+    {
+      "parameters": {
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        288
+      ],
+      "id": "126987b5-5fd9-4fce-a16a-bd3563f6d0db",
+      "name": "Live Regulatory Search",
+      "credentials": {
+        "tavilyApi": {
+          "id": "dArQj1mIEHnpmfGF",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "kindafaisal@gmail.com",
+        "subject": "⚠️ Logistics Alert: DG & Customs Compliance Risk Found",
+        "message": "={{ $json.output ?? $json.text ?? $json.message ?? \"Compliance check completed - please review LangSmith for details\" }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        32
+      ],
+      "id": "4453d1cf-bbcd-424f-a440-a1584696a664",
+      "name": "Automated Emergency Alert.",
+      "webhookId": "527454fe-4f90-4678-9b61-b51dd8af6426",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GtpAIfkELQJF4yuL",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1xGKLZ_IfzZrV2EzTXA3yEpAD-1Zl0et2RtsEq_IPC5s"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2058733959,
+          "mode": "list",
+          "cachedResultName": "shipments.csv",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xGKLZ_IfzZrV2EzTXA3yEpAD-1Zl0et2RtsEq_IPC5s/edit#gid=2058733959"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "compliance_status",
+              "lookupValue": "Human review"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -608,
+        32
+      ],
+      "id": "8952697c-349d-4704-aef6-70e58510ff21",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IbgJBk19scWKkiL5",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "=1xGKLZ_IfzZrV2EzTXA3yEpAD-1Zl0et2RtsEq_IPC5s",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2058733959,
+          "mode": "list",
+          "cachedResultName": "shipments.csv",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xGKLZ_IfzZrV2EzTXA3yEpAD-1Zl0et2RtsEq_IPC5s/edit#gid=2058733959"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "doc_id": "=DOC-5000"
+          },
+          "matchingColumns": [
+            "doc_id"
+          ],
+          "schema": [
+            {
+              "id": "doc_id",
+              "displayName": "doc_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "time",
+              "displayName": "time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "week_number",
+              "displayName": "week_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "month",
+              "displayName": "month",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "doc_type",
+              "displayName": "doc_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "carrier",
+              "displayName": "carrier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "processing_time_seconds",
+              "displayName": "processing_time_seconds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "manual_baseline_seconds",
+              "displayName": "manual_baseline_seconds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "time_saved_seconds",
+              "displayName": "time_saved_seconds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence_score",
+              "displayName": "confidence_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "compliance_status",
+              "displayName": "compliance_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_detail",
+              "displayName": "error_detail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dg_class",
+              "displayName": "dg_class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "un_number",
+              "displayName": "un_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_dangerous_goods",
+              "displayName": "is_dangerous_goods",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customs_hold",
+              "displayName": "customs_hold",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "processing_time_minutes",
+              "displayName": "processing_time_minutes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence_band",
+              "displayName": "confidence_band",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "doc_category",
+              "displayName": "doc_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        80,
+        176
+      ],
+      "id": "bff3def7-72e9-43c5-bbb2-1b8322b85c54",
+      "name": "Update row in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IbgJBk19scWKkiL5",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f40b0982-baa0-4bed-b056-d326c3438b76",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -960,
+        208
+      ],
+      "id": "4645d334-f3a6-47bf-9d35-e35845a6b7d0",
+      "name": "Webhook",
+      "webhookId": "f40b0982-baa0-4bed-b056-d326c3438b76"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -816,
+        304
+      ],
+      "id": "35b46287-a7d9-4bf1-bb5c-4eb8bb2ca1d4",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-03-19T16:23:37.123+01:00",
+          "Readable date": "March 19th 2026, 4:23:37 pm",
+          "Readable time": "4:23:37 pm",
+          "Day of week": "Thursday",
+          "Year": "2026",
+          "Month": "March",
+          "Day of month": "19",
+          "Hour": "16",
+          "Minute": "23",
+          "Second": "37",
+          "Timezone": "Europe/Berlin (UTC+01:00)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Get row(s) in sheet": [
+      {
+        "json": {
+          "row_number": 2,
+          "doc_id": "DOC-5000",
+          "date": "2026-03-10",
+          "time": "0:58",
+          "week_number": 11,
+          "month": "March",
+          "doc_type": "DG Declaration (IATA)",
+          "route": "DE → CH",
+          "carrier": "DSV",
+          "processing_time_seconds": 53,
+          "manual_baseline_seconds": 524,
+          "time_saved_seconds": 471,
+          "confidence_score": 87.4,
+          "compliance_status": "Human review",
+          "error_detail": "",
+          "dg_class": "Class 3 (Flammable liquids)",
+          "un_number": "UN2891",
+          "is_dangerous_goods": "Yes",
+          "customs_hold": "No",
+          "processing_time_minutes": 0.88,
+          "confidence_band": "85-95% (Good)",
+          "doc_category": "Dangerous Goods"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Compliance Logic Engine.",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compliance Logic Engine.": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Automated Emergency Alert.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Live Regulatory Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "Compliance Logic Engine.",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Compliance Logic Engine.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Automated Emergency Alert.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "d238de43-a80a-4a9f-a01c-be42a0c45c1d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "40900f79b2659ff491dc454f07bda428e3a2e762884a19ea36a785f589743bc3"
+  },
+  "id": "ano1cUXn8vZOYvov",
+  "tags": []
+}
